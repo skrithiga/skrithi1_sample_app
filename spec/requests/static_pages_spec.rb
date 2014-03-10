@@ -1,4 +1,5 @@
 require 'spec_helper'
+include ActionView::Helpers::TextHelper
 
 describe "Static pages" do
 
@@ -11,12 +12,12 @@ describe "Static pages" do
 
   describe "Home page" do
     before { visit root_path }
-    let(:heading)    { 'Sample App' }
+    let(:heading) { 'Sample App' }
     let(:page_title) { '' }
 
     it_should_behave_like "all static pages"
     it { should_not have_title('| Home') }
-    
+
     describe "for signed-in users" do
       let(:user) { FactoryGirl.create(:user) }
       before do
@@ -30,22 +31,24 @@ describe "Static pages" do
         user.feed.each do |item|
           expect(page).to have_selector("li##{item.id}", text: item.content)
         end
+        expect(page).to have_selector('section h1',text: user.name);
+        expect(page).to have_selector('section span',
+          text: pluralize(Micropost.count.to_s,"micropost"));
       end
     end
   end
 
   describe "Help page" do
     before { visit help_path }
-
-    let(:heading)    { 'Help' }
+    let(:heading) { 'Help' }
     let(:page_title) { 'Help' }
 
     it_should_behave_like "all static pages"
   end
 
- describe "About page" do
+  describe "About page" do
     before { visit about_path }
-    let(:heading)    { 'About Us' }
+    let(:heading) { 'About Us' }
     let(:page_title) { 'About Us' }
 
     it_should_behave_like "all static pages"
@@ -53,13 +56,13 @@ describe "Static pages" do
 
   describe "Contact page" do
     before { visit contact_path }
-    let(:heading)    { 'Contact' }
+    let(:heading) { 'Contact' }
     let(:page_title) { 'Contact' }
 
     it_should_behave_like "all static pages"
   end
 
-it "should have the right links on the layout" do
+  it "should have the right links on the layout" do
     visit root_path
     click_link "About"
     expect(page).to have_title(full_title('About Us'))
