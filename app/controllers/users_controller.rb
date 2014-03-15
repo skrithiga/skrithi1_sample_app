@@ -1,6 +1,5 @@
 class UsersController < ApplicationController
-   before_action :signed_in_user,
-                only: [:index, :edit, :update, :destroy, :following, :followers]
+  before_action :signed_in_user, only: [:edit, :update, :destroy]
   before_action :correct_user, only: [:edit, :update]
   before_action :admin_user, only: :destroy
   before_filter :redirect_on_new, only: [:new, :create]
@@ -10,7 +9,7 @@ class UsersController < ApplicationController
   end
 
   def show
-    @user = User.find(params[:id])
+   @user = User.find(params[:id])
     @microposts = @user.microposts.paginate(page: params[:page])
   end
   

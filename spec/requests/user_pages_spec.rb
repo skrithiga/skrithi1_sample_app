@@ -4,34 +4,6 @@ describe "User pages" do
 
   subject { page }
 
-  describe "following/followers" do
-    let(:user) { FactoryGirl.create(:user) }
-    let(:other_user) { FactoryGirl.create(:user) }
-    before { user.follow!(other_user) }
-
-    describe "followed users" do
-      before do
-        sign_in user
-        visit following_user_path(user)
-      end
-
-      it { should have_title(full_title('Following')) }
-      it { should have_selector('h3', text: 'Following') }
-      it { should have_link(other_user.name, href: user_path(other_user)) }
-    end
-
-    describe "followers" do
-      before do
-        sign_in other_user
-        visit followers_user_path(other_user)
-      end
-
-      it { should have_title(full_title('Followers')) }
-      it { should have_selector('h3', text: 'Followers') }
-      it { should have_link(user.name, href: user_path(user)) }
-    end
-  end
-  
   describe "index" do
     let(:user) { FactoryGirl.create(:user) }
     before(:each) do
@@ -87,6 +59,12 @@ describe "User pages" do
     it { should have_selector('h1', text: user.name) }
     it { should have_selector('title', text: user.name) }
 
+    describe "microposts" do
+      it { should have_content(m1.content) }
+      it { should have_content(m2.content) }
+      it { should have_content(user.microposts.count) }
+    end
+
     describe "follow/unfollow buttons" do
       let(:other_user) { FactoryGirl.create(:user) }
       before { sign_in user }
@@ -135,11 +113,28 @@ describe "User pages" do
           it { should have_xpath("//input[@value='Follow']") }
         end
       end
+    end
 
-    describe "microposts" do
-      it { should have_content(m1.content) }
-      it { should have_content(m2.content) }
-      it { should have_content(user.microposts.count) }
+    describe "user stats display correctly" do
+      let(:other_user) { FactoryGirl.create(:user) }
+      before do
+        user.follow!(other_user)
+        other_user.follow!(user)
+        visit user_path(user)
+      end
+
+      it { should have_selector('strong#following', text:'1') }
+      it { should have_selector('strong#followers', text:'1') }
+
+      describe "after unfollowing other user" do
+        before { user.unfollow!(other_user); visit user_path(user) }
+        it { should have_selector('strong#following', text: '0') }
+      end
+
+      describe "after unfollowed by other user" do
+        before { other_user.unfollow!(user); visit user_path(user) }
+        it { should have_selector('strong#followers', text: '0') }
+      end
     end
   end
 
@@ -244,6 +239,34 @@ describe "User pages" do
         patch user_path(user), params
       end
       specify { expect(user.reload).not_to be_admin }
+    end
+  end
+
+  describe "following/followers" do
+    let(:user) { FactoryGirl.create(:user) }
+    let(:other_user) { FactoryGirl.create(:user) }
+    before { user.follow!(other_user) }
+
+    describe "followed users" do
+      before do
+        sign_in user
+        visit following_user_path(user)
+      end
+
+      it { should have_title(full_title('Following')) }
+      it { should have_selector('h3', text: 'Following') }
+      it { should have_link(other_user.name, href: user_path(other_user)) }
+    end
+
+    describe "followers" do
+      before do
+        sign_in other_user
+        visit followers_user_path(other_user)
+      end
+
+      it { should have_title(full_title('Followers')) }
+      it { should have_selector('h3', text: 'Followers') }
+      it { should have_link(user.name, href: user_path(user)) }
     end
   end
 end
